@@ -11,7 +11,7 @@ import SwiftUI
 struct ZenFlowApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            DeepDiveTimer()
         }
     }
 }

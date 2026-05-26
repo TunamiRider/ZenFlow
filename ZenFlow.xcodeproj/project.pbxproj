@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		52A403582FBF865A006CD51B /* AVPlayerPlus in Frameworks */ = {isa = PBXBuildFile; productRef = 52A403572FBF865A006CD51B /* AVPlayerPlus */; };
+		52A4035B2FBF86E6006CD51B /* AVPlayerPlus in Frameworks */ = {isa = PBXBuildFile; productRef = 52A4035A2FBF86E6006CD51B /* AVPlayerPlus */; };
+		52A403652FBF888B006CD51B /* AVPlayerPlus in Frameworks */ = {isa = PBXBuildFile; productRef = 52A403642FBF888B006CD51B /* AVPlayerPlus */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		52A403482FBF8552006CD51B /* ZenFlow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZenFlow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +29,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				52A4035B2FBF86E6006CD51B /* AVPlayerPlus in Frameworks */,
+				52A403582FBF865A006CD51B /* AVPlayerPlus in Frameworks */,
+				52A403652FBF888B006CD51B /* AVPlayerPlus in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +74,9 @@
 			);
 			name = ZenFlow;
 			packageProductDependencies = (
+				52A403572FBF865A006CD51B /* AVPlayerPlus */,
+				52A4035A2FBF86E6006CD51B /* AVPlayerPlus */,
+				52A403642FBF888B006CD51B /* AVPlayerPlus */,
 			);
 			productName = ZenFlow;
 			productReference = 52A403482FBF8552006CD51B /* ZenFlow.app */;
@@ -94,6 +106,9 @@
 			);
 			mainGroup = 52A4033F2FBF8552006CD51B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				52A403632FBF888B006CD51B /* XCLocalSwiftPackageReference "../AVPlayerPlus" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 52A403492FBF8552006CD51B /* Products */;
 			projectDirPath = "";
@@ -332,6 +347,28 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		52A403632FBF888B006CD51B /* XCLocalSwiftPackageReference "../AVPlayerPlus" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../AVPlayerPlus;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		52A403572FBF865A006CD51B /* AVPlayerPlus */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AVPlayerPlus;
+		};
+		52A4035A2FBF86E6006CD51B /* AVPlayerPlus */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AVPlayerPlus;
+		};
+		52A403642FBF888B006CD51B /* AVPlayerPlus */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AVPlayerPlus;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 52A403402FBF8552006CD51B /* Project object */;
 }
