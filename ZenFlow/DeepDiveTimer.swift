@@ -21,7 +21,7 @@ struct DeepDiveTimer: View {
     @State private var isFinished: Bool = false
     @State private var showDescription: Bool = false
     @Environment(\.dismiss) private var dismiss
-    @State private var minutes: Int = 2
+    @State private var minutes: Int = 5
     private let dingPlayer = AVPlayer.dingPlayer()
     private let dingIntervalPlayer = AVPlayer.dingIntervalPlayer()
     
@@ -38,6 +38,7 @@ struct DeepDiveTimer: View {
     @State private var settings = PlayerSettings()
     @State private var showSheet = false
     @State private var selectedDetent: PresentationDetent = .large
+    @State private var yogaIconColorMultiplier = Color(red: 0.75, green: 0.75, blue: 0.75)
     
     private func switchPlayer(){
         switch settings.selected {
@@ -59,6 +60,27 @@ struct DeepDiveTimer: View {
             currentPlayer = modernSutraPlayer
         }
     }
+    private func switchColorMultiplier(){
+        switch settings.selected {
+        case .deepOcean:
+            yogaIconColorMultiplier = Color(red: 0.50, green: 0.57, blue: 0.62)//Color(red: 0.7, green: 0.7, blue: 0.85)
+        case .rainDrizzleThunder:
+            yogaIconColorMultiplier = Color(red: 0.51, green: 0.5, blue: 0.49)
+        case .seasideRocksShore:
+            yogaIconColorMultiplier = Color(red: 0.77, green: 0.69, blue: 0.6)
+        case .seaLagoonWaves:
+            yogaIconColorMultiplier = Color(red: 0.4, green: 0.5, blue: 0.55)
+        case .underWaterRain:
+            yogaIconColorMultiplier = Color(red: 0.77, green: 0.92, blue: 0.92).opacity(0.5)
+        case .underwaterWhaleDiving:
+            yogaIconColorMultiplier = Color(red: 0.46, green: 0.51, blue: 0.6).opacity(0.8)//Color(red: 0.86, green: 0.86, blue: 0.95)
+        case .crystalBowl:
+            yogaIconColorMultiplier = Color(red: 0.75, green: 0.75, blue: 0.75)
+        case .modernSutra:
+            yogaIconColorMultiplier = Color(red: 0.74, green: 0.64, blue: 0.64)
+        }
+    }
+    
     // MARK: - Computed
     private var progress: Double {
         guard totalSeconds > 0 else { return 0 }
@@ -126,6 +148,12 @@ struct DeepDiveTimer: View {
                             .scaledToFit()
                             .frame(width: 180, height: 180)
                             .background(Color.clear)
+                            //.colorMultiply(.gray)
+                            .colorMultiply(yogaIconColorMultiplier)
+                            //.brightness(-0.2)
+                            .id(settings.backgroundImagePath)
+                            .transition(.opacity)
+                            
                     }
                 }
                 .frame(width: 240, height: 240)
@@ -197,6 +225,7 @@ struct DeepDiveTimer: View {
             //startTimer()
             
             switchPlayer()
+            switchColorMultiplier()
             
         }
         .onDisappear {
@@ -227,6 +256,7 @@ struct DeepDiveTimer: View {
             if !newValue { // sheet is closing / dismissed
                 withAnimation(.easeInOut(duration: 3)) {
                     switchPlayer()
+                    switchColorMultiplier()
                     resetTimer()
                 }
 
@@ -260,7 +290,7 @@ struct DeepDiveTimer: View {
             totalSeconds = minutes * 60
             secondsRemaining = totalSeconds
             currentPlayer?.volume = 1.0
-
+            currentPlayer?.reset()
         }
     }
 
@@ -297,6 +327,8 @@ struct DeepDiveTimer: View {
                 } else {
                     isFinished = true
                     stopTimer()
+                    currentPlayer?.volume = 1.0
+                    currentPlayer?.reset()
                 }
             }
 
