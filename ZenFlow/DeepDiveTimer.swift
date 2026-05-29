@@ -6,10 +6,10 @@
 //
 
 import SwiftUI
-
-import SwiftUI
+import SwiftData
 import AVPlayerPlus
 import AVFoundation
+
 struct DeepDiveTimer: View {
 
     // MARK: - State
@@ -21,7 +21,7 @@ struct DeepDiveTimer: View {
     @State private var isFinished: Bool = false
     @State private var showDescription: Bool = false
     @Environment(\.dismiss) private var dismiss
-    @State private var minutes: Int = 5
+    //@State private var minutes: Int = 5
     private let dingPlayer = AVPlayer.dingPlayer()
     private let dingIntervalPlayer = AVPlayer.dingIntervalPlayer()
     
@@ -35,7 +35,7 @@ struct DeepDiveTimer: View {
     private let modernSutraPlayer = AVPlayer.modernSutraPlayer()
     
     @State var currentPlayer: AVPlayer?
-    @State private var settings = PlayerSettings()
+    @State private var settings = PlayerSettings.load()
     @State private var showSheet = false
     @State private var selectedDetent: PresentationDetent = .large
     @State private var yogaIconColorMultiplier = Color(red: 0.75, green: 0.75, blue: 0.75)
@@ -80,6 +80,33 @@ struct DeepDiveTimer: View {
             yogaIconColorMultiplier = Color(red: 0.74, green: 0.64, blue: 0.64)
         }
     }
+//    private func loadPlayerSettings(){
+//        
+//        let minutes = UserDefaults.standard.integer(forKey: "minutes")
+//        if minutes == 0 {
+//            UserDefaults.standard.set(5, forKey: "minutes")
+//        } else {
+//            //self.minutes = minutes
+//        }
+//        
+//        //settings
+//        if let dingEnabled = UserDefaults.standard.object(forKey: "dingEnabled") as? Bool {
+//            self.settings.dingEnabled = dingEnabled
+//        }
+//        
+//        let dingInterval = UserDefaults.standard.integer(forKey: "dingInterval")
+//        if dingInterval == 0 {
+//            UserDefaults.standard.set(1, forKey: "dingInterval")
+//        } else {
+//            self.settings.dingInterval = dingInterval
+//        }
+//        
+//        if let resourceName = UserDefaults.standard.string(forKey: "resourceName"),
+//           let soundSource = AVPlayerPlus.SoundResource(rawValue: resourceName){
+//            self.settings.selected = soundSource
+//        }
+//        //SwiftData
+//    }
     
     // MARK: - Computed
     private var progress: Double {
@@ -185,7 +212,7 @@ struct DeepDiveTimer: View {
                     Text("Duration")
                         .font(.system(size: 18, weight: .semibold, design: .default))
                         .foregroundColor(.white)
-                    DurationPicker(minutes: $minutes, isRunning: (isRunning || isSnoozed))
+                    DurationPicker(minutes: $settings.duration, isRunning: (isRunning || isSnoozed))
                 }
                 Spacer(minLength: 10)
                 
@@ -220,9 +247,12 @@ struct DeepDiveTimer: View {
         }
         .animation(.easeInOut(duration: 3), value: settings.backgroundImagePath)
         .onAppear {
-            totalSeconds = minutes * 60
+            totalSeconds = settings.duration * 60
             secondsRemaining = totalSeconds
             //startTimer()
+            
+            //SwiftData
+            //loadPlayerSettings()
             
             switchPlayer()
             switchColorMultiplier()
@@ -236,8 +266,9 @@ struct DeepDiveTimer: View {
                 isSnoozed = false
             }
         }
-        .onChange(of: minutes){oldValue, newValue in
-            totalSeconds = minutes * 60
+        .onChange(of: settings.duration){oldValue, newValue in
+            UserDefaults.standard.set(settings.duration, forKey: "duration")
+            totalSeconds = settings.duration * 60
             secondsRemaining = totalSeconds
         }
         .sheet(isPresented: $showSheet) {
@@ -255,6 +286,7 @@ struct DeepDiveTimer: View {
         .onChange(of: showSheet) { _, newValue in
             if !newValue { // sheet is closing / dismissed
                 withAnimation(.easeInOut(duration: 3)) {
+                    //loadPlayerSettings()
                     switchPlayer()
                     switchColorMultiplier()
                     resetTimer()
@@ -287,7 +319,7 @@ struct DeepDiveTimer: View {
         // Reset if needed
         if secondsRemaining == 0 {
 
-            totalSeconds = minutes * 60
+            totalSeconds = settings.duration * 60
             secondsRemaining = totalSeconds
             currentPlayer?.volume = 1.0
             currentPlayer?.reset()

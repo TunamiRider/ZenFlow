@@ -264,6 +264,12 @@ struct DingSettingsSection: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
+            .onChange(of: dingEnabled){
+                UserDefaults.standard.set(dingEnabled, forKey: "dingEnabled")
+            }
+            .onChange(of: dingInterval){
+                UserDefaults.standard.set(dingInterval, forKey: "dingInterval")
+            }
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
@@ -328,6 +334,11 @@ struct SoundPickerSheet: View {
                                     .stroke(OceanTheme.sandDeep.opacity(0.30), lineWidth: 1)
                             )
                             .padding(.horizontal)
+                        }
+                        .onChange(of: selectedSound){
+                            let resourceName = selectedSound.resourceName
+                            UserDefaults.standard.set(resourceName, forKey: "resourceName")
+                            //let soundResource = SoundResource(rawValue: "rain-drizzle-thunder")
                         }
                     }
                     .padding(.top, 20)
