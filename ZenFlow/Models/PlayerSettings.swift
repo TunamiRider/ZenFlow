@@ -12,6 +12,7 @@ struct PlayerSettings {
     var dingEnabled: Bool = true
     var dingInterval: Int = 1 //minutes
     var duration: Int = 5
+    var isWidgetOn: Bool = true
     
     
     static func load() -> PlayerSettings {
@@ -32,7 +33,9 @@ struct PlayerSettings {
             UserDefaults.standard.set(5, forKey: "duration")
         }
         
-        return PlayerSettings(selected: savedResource, dingEnabled: dingEnabled, dingInterval: dingInterval,duration: duration)
+        let isWidgetOn = UserDefaults.standard.object(forKey: "isWidgetOn") as? Bool ?? true
+        
+        return PlayerSettings(selected: savedResource, dingEnabled: dingEnabled, dingInterval: dingInterval,duration: duration, isWidgetOn: isWidgetOn)
 
     }
     
@@ -41,6 +44,7 @@ struct PlayerSettings {
         UserDefaults.standard.set(dingEnabled, forKey: "dingEnabled")
         UserDefaults.standard.set(dingInterval, forKey: "dingInterval")
         UserDefaults.standard.set(duration, forKey: "duration")
+        UserDefaults.standard.set(isWidgetOn, forKey: "isWidgetOn")
     }
     
     var totalSeconds: Int {

@@ -9,19 +9,20 @@ import SwiftUI
 import SwiftData
 import AVPlayerPlus
 import AVFoundation
+import ActivityKit
 
 struct DeepDiveTimer: View {
 
     // MARK: - State
     @State private var secondsRemaining: Int = 0
     @State private var totalSeconds: Int = 0
-    @State private var isRunning: Bool = false
+    @AppStorage("isPlaying", store: UserDefaults(suiteName: "group.com.ysuzuki.ZenFlow")) private var isRunning: Bool = false
     @State private var isSnoozed: Bool = false
     @State private var timer: Timer? = nil
     @State private var isFinished: Bool = false
     @State private var showDescription: Bool = false
     @Environment(\.dismiss) private var dismiss
-    //@State private var minutes: Int = 5
+
     private let dingPlayer = AVPlayer.dingPlayer()
     private let dingIntervalPlayer = AVPlayer.dingIntervalPlayer()
     
@@ -34,11 +35,20 @@ struct DeepDiveTimer: View {
     private let crystalBowlPlayer = AVPlayer.crystalBowlPlayer()
     private let modernSutraPlayer = AVPlayer.modernSutraPlayer()
     
-    @State var currentPlayer: AVPlayer?
+    @State private var currentPlayer: AVPlayer?
     @State private var settings = PlayerSettings.load()
     @State private var showSheet = false
     @State private var selectedDetent: PresentationDetent = .large
     @State private var yogaIconColorMultiplier = Color(red: 0.75, green: 0.75, blue: 0.75)
+    
+    //Detect speaker change
+    private let notificationCenter = NotificationCenter.default
+    @State private var routeChangeObserver: NSObjectProtocol?
+    @State private var interruptionObserver: NSObjectProtocol?
+    
+    //WidgetActivity
+    @State private var timerWidgetActivity:TimerWidgetActivity = TimerWidgetActivity()
+    @State private var isHandlingWidgetIntent = false
     
     private func switchPlayer(){
         switch settings.selected {
@@ -80,34 +90,7 @@ struct DeepDiveTimer: View {
             yogaIconColorMultiplier = Color(red: 0.74, green: 0.64, blue: 0.64)
         }
     }
-//    private func loadPlayerSettings(){
-//        
-//        let minutes = UserDefaults.standard.integer(forKey: "minutes")
-//        if minutes == 0 {
-//            UserDefaults.standard.set(5, forKey: "minutes")
-//        } else {
-//            //self.minutes = minutes
-//        }
-//        
-//        //settings
-//        if let dingEnabled = UserDefaults.standard.object(forKey: "dingEnabled") as? Bool {
-//            self.settings.dingEnabled = dingEnabled
-//        }
-//        
-//        let dingInterval = UserDefaults.standard.integer(forKey: "dingInterval")
-//        if dingInterval == 0 {
-//            UserDefaults.standard.set(1, forKey: "dingInterval")
-//        } else {
-//            self.settings.dingInterval = dingInterval
-//        }
-//        
-//        if let resourceName = UserDefaults.standard.string(forKey: "resourceName"),
-//           let soundSource = AVPlayerPlus.SoundResource(rawValue: resourceName){
-//            self.settings.selected = soundSource
-//        }
-//        //SwiftData
-//    }
-    
+
     // MARK: - Computed
     private var progress: Double {
         guard totalSeconds > 0 else { return 0 }
@@ -175,9 +158,7 @@ struct DeepDiveTimer: View {
                             .scaledToFit()
                             .frame(width: 180, height: 180)
                             .background(Color.clear)
-                            //.colorMultiply(.gray)
                             .colorMultiply(yogaIconColorMultiplier)
-                            //.brightness(-0.2)
                             .id(settings.backgroundImagePath)
                             .transition(.opacity)
                             
@@ -196,22 +177,16 @@ struct DeepDiveTimer: View {
                 )
                 .padding(.horizontal, 32)
                 .padding(.bottom, 8)
-                
-                //Spacer()
 
                 // ── Label ──────────────────────────────────────────────────
                 VStack(spacing: 6) {
-                    Text(isFinished ? "Time's up" : isRunning ? settings.selected.displayName : "Lull")
-                        .font(.system(size: 18, weight: .semibold, design: .default))
-                        .foregroundColor(.white)
+                    Text(isFinished ? "Time's up" : isRunning ? settings.selected.displayName : "Lull").font(.system(size: 18, weight: .semibold, design: .default)).foregroundColor(.white)
                 }
 
                 Spacer()
 
                 VStack(spacing: 6) {
-                    Text("Duration")
-                        .font(.system(size: 18, weight: .semibold, design: .default))
-                        .foregroundColor(.white)
+                    Text("Duration").font(.system(size: 18, weight: .semibold, design: .default)).foregroundColor(.white)
                     DurationPicker(minutes: $settings.duration, isRunning: (isRunning || isSnoozed))
                 }
                 Spacer(minLength: 10)
@@ -224,7 +199,7 @@ struct DeepDiveTimer: View {
                         if isFinished || !isRunning {
                             startTimer()
                         } else {
-                            getUp()
+                            stopTimer()
                         }
                     } label: {
                         Text(isFinished ? "New Session" : isRunning ? "Pause" : isSnoozed ? "Start again" : "Start focus")
@@ -249,17 +224,45 @@ struct DeepDiveTimer: View {
         .onAppear {
             totalSeconds = settings.duration * 60
             secondsRemaining = totalSeconds
-            //startTimer()
-            
-            //SwiftData
-            //loadPlayerSettings()
             
             switchPlayer()
             switchColorMultiplier()
             
+            starOobserveRouteChanges()
+            startObservingInterruptions()
+            
+            CFNotificationCenterAddObserver(
+                CFNotificationCenterGetDarwinNotifyCenter(),
+                nil,
+                { _, _, _, _, _ in
+                    
+                    DispatchQueue.main.async{
+                        // now isRunning's onChange fires on the right thread
+                        // and startTimer() / AVAudioSession run on main
+                        let shared = UserDefaults(suiteName: "group.com.ysuzuki.ZenFlow")
+                        let isNowPlaying = shared?.bool(forKey: "isPlaying") ?? false
+                        //print("🔔 Darwin callback fired, isPlaying: \(shared?.bool(forKey: "isPlaying") ?? false)")
+                        
+                        if isNowPlaying {
+                            // Can't call self here (C callbacl) - post a local NSNotification instead
+                            NotificationCenter.default.post(name: .init("ZenFlowResumeFromWidget")
+                                                            ,object: nil
+                                                            ,userInfo: ["fromLockScreen": true]
+                            )
+                        }
+                    }
+                    // isRunning already changed via shared UserDefaults — onChange picks it up
+                },
+                "com.ysuzuki.ZenFlow.playbackChanged" as CFString,
+                nil,
+                .deliverImmediately
+            )
         }
         .onDisappear {
             stopTimer()
+            stopObservingRouteChanges()
+            stopObservingInterruptions()
+            
         }
         .onChange(of: isFinished){ oldValue, newValue in
             if newValue {
@@ -275,7 +278,8 @@ struct DeepDiveTimer: View {
             SoundPickerSheet(
                 selectedSound: $settings.selected,
                 dingEnabled: $settings.dingEnabled,
-                dingInterval: $settings.dingInterval
+                dingInterval: $settings.dingInterval,
+                isWidgetOn: $settings.isWidgetOn
             )
             .presentationDetents([.large, .medium], selection: $selectedDetent)
             .presentationDragIndicator(.visible)
@@ -291,7 +295,34 @@ struct DeepDiveTimer: View {
                     switchColorMultiplier()
                     resetTimer()
                 }
-
+            }
+        }
+        .onChange(of: isRunning) { oldValue, newValue in
+            guard !isHandlingWidgetIntent else { return }
+            isHandlingWidgetIntent = true
+            defer { isHandlingWidgetIntent = false }
+            
+            if newValue && timer == nil {
+                startTimer()
+                
+            } else if !newValue && timer != nil {
+                stopTimer()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .init("ZenFlowResumeFromWidget"))){ notification in
+            
+            if timer == nil {
+                startTimer()
+            }
+            let fromLockScreen = notification.userInfo?["fromLockScreen"] as? Bool ?? false
+            if fromLockScreen {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    UIControl().sendAction(
+                        #selector(URLSessionTask.suspend),
+                        to: UIApplication.shared,
+                        for: nil
+                    )
+                }
             }
         }
     }
@@ -321,19 +352,57 @@ struct DeepDiveTimer: View {
 
             totalSeconds = settings.duration * 60
             secondsRemaining = totalSeconds
-            currentPlayer?.volume = 1.0
             currentPlayer?.reset()
         }
     }
 
+    @discardableResult
+    private  func activateAudioSession(maxAttempts: Int = 3, delaySeconds: Double = 0.15) async -> Bool {
+        for attempt in 1...maxAttempts {
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+                try AVAudioSession.sharedInstance().setActive(true, options: .notifyOthersOnDeactivation)
+                return true
+            } catch {
+                if attempt < maxAttempts {
+                    try? await Task.sleep(nanoseconds: UInt64(delaySeconds * 1_000_000_000))
+                }
+            }
+        }
+        return false
+    }
     // MARK: - Timer logic
     private func startTimer() {
-//        isSnoozed = false
-//        isFinished = false
-
+        guard timer == nil else { return }
+        let isResume = isSnoozed
         resetTimer()
-
         isRunning = true
+        UIApplication.shared.isIdleTimerDisabled = true  // ← keep screen on
+        
+        Task { @MainActor in
+            // Single, retry-capable activation — never call setActive again in resumeFromSilent
+            let activated = await activateAudioSession()
+            guard activated else { return }
+            if isResume {
+                currentPlayer?.resumeFromSilent()  // picks up where it left off
+            } else {
+                currentPlayer?.startLooping()   // seeks to zero, fresh start
+            }
+        }
+        
+        if settings.isWidgetOn {
+            // ONE update when starting — pass the endDate
+            let endDate = Date().addingTimeInterval(Double(secondsRemaining))
+            Task {
+                await timerWidgetActivity.startOrUpdate(
+                    displayName: settings.selected.displayName,
+                    endDate: endDate,
+                    totalSeconds: Double(totalSeconds),
+                    isRunning: true
+                )
+            }
+        }
+        
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             
             Task { @MainActor in
@@ -344,7 +413,7 @@ struct DeepDiveTimer: View {
                     dingPlayer.play()
                 }
                 // Interval sound
-                let isIntervalSound = settings.dingEnabled && secondsRemaining % settings.totalSeconds == 0
+                let isIntervalSound = settings.dingEnabled && (totalSeconds - secondsRemaining) % (settings.dingInterval * 60) == 0
                 if !startOrEnd && isIntervalSound {
                     dingIntervalPlayer.seek(to: .zero)
                     dingIntervalPlayer.play()
@@ -359,43 +428,160 @@ struct DeepDiveTimer: View {
                 } else {
                     isFinished = true
                     stopTimer()
-                    currentPlayer?.volume = 1.0
                     currentPlayer?.reset()
+                    if settings.isWidgetOn {
+                        Task{
+                            await timerWidgetActivity.endLiveActivity()
+                        }
+                    }
                 }
             }
-
         }
-
-        //deepOceanPlayer.startLooping()
-        currentPlayer?.startLooping()
     }
 
     private func stopTimer() {
         timer?.invalidate()
         timer = nil
         isRunning = false
+        isSnoozed = true
+        UIApplication.shared.isIdleTimerDisabled = false  // ← allow screen to sleep
         
-        isSnoozed = true
-        //deepOceanPlayer.stopLooping()
-        currentPlayer?.stopLooping()
-    }
+        if isFinished {
+            currentPlayer?.stopLooping()
+        } else {
+            currentPlayer?.pauseWithoutStopping()
+        }
+        
+        if settings.isWidgetOn {
+            Task(priority: .userInitiated) {
+                await timerWidgetActivity.pause()
+            }
+        }
 
-    private func snooze() {
-        stopTimer()
+    }
+    
+    private func stopTimerOnly() {
+        timer?.invalidate()
+        timer = nil
+        isRunning = false
         isSnoozed = true
-        // Snooze for 5 minutes
-        let mins = 1
-        totalSeconds = mins * 60
-        secondsRemaining = totalSeconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            startTimer()
+        UIApplication.shared.isIdleTimerDisabled = false  // ← allow screen to sleep
+
+        if isFinished{
+            currentPlayer?.stopLooping()
+            
+        } else {
+            currentPlayer?.pauseWithoutStopping()
+        }
+    }
+    
+    private func starOobserveRouteChanges() {
+        routeChangeObserver = notificationCenter.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { notification in
+            guard let userInfo = notification.userInfo,
+                  let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+                  let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue),
+                  reason == .oldDeviceUnavailable else {
+                return
+            }
+            
+            // Earphones unplugged → stop timer and player
+            Task { @MainActor in
+                //print("Earphones unplugged → stop timer and player")
+                self.stopTimerOnly()  // stop player/timer
+                
+                if settings.isWidgetOn {
+                    await timerWidgetActivity.endLiveActivity()  // update widget
+                    
+                    // ONE update when starting — pass the endDate
+                    let endDate = Date().addingTimeInterval(Double(secondsRemaining))
+                    await timerWidgetActivity.startOrUpdate(
+                        displayName: settings.selected.displayName,
+                        endDate: endDate,
+                        totalSeconds: Double(totalSeconds),
+                        isRunning: false
+                    )
+                }
+                
+            }
+
         }
     }
 
-    private func getUp() {
-        stopTimer()
-        // Notify completion — in a real app you'd call bubble.markCompleted() or dismiss
+    private func stopObservingRouteChanges() {
+        if let observer = routeChangeObserver {
+            notificationCenter.removeObserver(observer)
+            routeChangeObserver = nil
+        }
     }
+    
+    
+    func startObservingInterruptions() {
+        interruptionObserver = notificationCenter.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { notification in
+
+            guard let userInfo = notification.userInfo,
+                  let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+                return
+            }
+
+            switch type {
+            case .began:
+                // Other app started playing audio → stop your player
+                Task { @MainActor in
+                    self.stopTimer()
+                    
+                    if settings.isWidgetOn {
+                        await timerWidgetActivity.endLiveActivity()  // update widget
+                        
+                        // ONE update when starting — pass the endDate
+                        let endDate = Date().addingTimeInterval(Double(secondsRemaining))
+                        await timerWidgetActivity.startOrUpdate(
+                            displayName: settings.selected.displayName,
+                            endDate: endDate,
+                            totalSeconds: Double(totalSeconds),
+                            isRunning: false
+                        )
+                    }
+
+                }
+            case .ended:
+                // Interruption ended → you can optionally resume if you want
+                // For now, we keep it stopped (user must tap play again)
+
+                // ✅ Reactivate session immediately when interruption ends
+                // even if user doesn't tap play yet — keeps session "warm"
+//                let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt
+//                let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue ?? 0)
+//                    
+//                    // Only auto-resume if system says we should (e.g. phone call ended)
+//                    // For earphone unplug we deliberately do NOT auto-resume
+//                    if options.contains(.shouldResume) && self.isSnoozed {
+//                        // optional: auto-resume here if you want
+//                    }
+//                }
+                
+                break
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    func stopObservingInterruptions() {
+        if let observer = interruptionObserver {
+            notificationCenter.removeObserver(observer)
+            interruptionObserver = nil
+        }
+    }
+
 }
 
 

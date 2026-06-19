@@ -81,7 +81,7 @@ struct WaveformView: View {
                 animationPhase = 1
             }
         }
-        .onChange(of: isAnimating) { animating in
+        .onChange(of: isAnimating) { _, animating in
             if animating {
                 withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
                     animationPhase = 1
@@ -185,11 +185,6 @@ struct DingSettingsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-//            Text("Ding (start/end)")
-//                .font(.oceanTitle)
-//                .foregroundColor(OceanTheme.textPrimary)
-//                .padding(.horizontal)
-//                .padding(.bottom, 10)
             
             Text("Interval Ding")
                 .font(.oceanTitle)
@@ -284,6 +279,49 @@ struct DingSettingsSection: View {
         minutes == 1 ? "1 min" : "\(minutes) mins"
     }
 }
+// MARK: - Ding Settings Section
+
+struct WidgetSettingSection: View {
+    @Binding var isWidgetOn: Bool
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            
+            Text("Show Live Activity on Lock Screen")
+                .font(.oceanTitle)
+                .foregroundColor(OceanTheme.textPrimary)
+                .padding(.horizontal)
+                .padding(.bottom, 10)
+            
+            VStack(spacing: 0) {
+                // Toggle row
+                Toggle(isOn: $isWidgetOn) {
+                    Label {
+                        Text("Live Activity")
+                            .font(.oceanBody)
+                            .foregroundColor(OceanTheme.textPrimary)
+                    } icon: {
+                        Image(systemName: "rectangle.stack.fill")
+                            .foregroundColor(OceanTheme.deepSlate)
+                    }
+                }
+                .toggleStyle(OceanToggleStyle())
+                .padding(.horizontal, 16)
+                .padding(.vertical, 13)
+            }
+            .onChange(of: isWidgetOn){
+                UserDefaults.standard.set(isWidgetOn, forKey: "isWidgetOn")
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(OceanTheme.sandDeep.opacity(0.30), lineWidth: 1)
+            )
+            .padding(.horizontal)
+            
+        }
+    }
+    
+}
 
 // MARK: - Sound Picker Sheet
 
@@ -292,6 +330,8 @@ struct SoundPickerSheet: View {
     @Binding var dingEnabled: Bool
     @Binding var dingInterval: Int
     @Environment(\.dismiss) private var dismiss
+    
+    @Binding var isWidgetOn: Bool
 
     private let columns = [GridItem(.adaptive(minimum: 80), spacing: 16)]
 
@@ -308,6 +348,8 @@ struct SoundPickerSheet: View {
                             dingEnabled: $dingEnabled,
                             dingInterval: $dingInterval
                         )
+                        
+                        WidgetSettingSection(isWidgetOn: $isWidgetOn)
 
                         VStack(alignment: .leading, spacing: 14) {
                             Text("Sound")
@@ -338,7 +380,6 @@ struct SoundPickerSheet: View {
                         .onChange(of: selectedSound){
                             let resourceName = selectedSound.resourceName
                             UserDefaults.standard.set(resourceName, forKey: "resourceName")
-                            //let soundResource = SoundResource(rawValue: "rain-drizzle-thunder")
                         }
                     }
                     .padding(.top, 20)
@@ -365,7 +406,7 @@ struct SoundPickerSheet: View {
                         )
                         .overlay(
                             Capsule()
-                                .stroke(OceanTheme.deepSlate.opacity(0.15), lineWidth: 1)
+                                .stroke(OceanTheme.deepSlate.opacity(0.15), lineWidth: 2)
                         )
                 }
             }
@@ -381,6 +422,7 @@ struct SoundPickerSheet: View {
         @State private var dingEnabled: Bool = true
         @State private var dingInterval: Int = 10
         @State private var showSheet = false
+        @State private var isWidgetOn = true
 
         var body: some View {
             ZStack {
@@ -407,12 +449,12 @@ struct SoundPickerSheet: View {
                     SoundPickerSheet(
                         selectedSound: $selected,
                         dingEnabled: $dingEnabled,
-                        dingInterval: $dingInterval
+                        dingInterval: $dingInterval,
+                        isWidgetOn: $isWidgetOn
                     )
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
                 }
-                
 
             }
         }
