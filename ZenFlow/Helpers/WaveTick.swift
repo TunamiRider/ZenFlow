@@ -100,7 +100,7 @@ struct WaveTick: View {
     let settings: PlayerSettings          // ← new
 
     private let barCount = 36
-    private let barWidth: CGFloat = 2.5
+    private let barWidth: CGFloat = 3.0
 
     @State private var tickPulse: Double = 0
     @State private var frozenT: Double = 0
@@ -119,7 +119,7 @@ struct WaveTick: View {
                     let y = size.height - h
 
                     let barFraction = Double(x) / Double(size.width)
-                    let alpha: Double = barFraction <= progress ? 0.9 : 0.3
+                    let alpha: Double = barFraction <= progress ? 1.0 : 0.6
 
                     let rect = CGRect(x: x, y: y, width: barWidth, height: h)
                     let path = Path(roundedRect: rect, cornerRadius: 1.5)
@@ -127,7 +127,7 @@ struct WaveTick: View {
                 }
             }
         }
-        .frame(height: 56)
+        .frame(height: 86)
         .task {
             while !Task.isCancelled {
                 let step = 0.04
@@ -207,7 +207,7 @@ struct WaveTick: View {
         // --- Tick pulse ---
         let peakPulse = tickPulse * exp(-tickPulse * 3.0) * 0.25
 
-        let base   = 0.15
+        let base   = 0.3
         let height = base + wave * waveform * edgeSoften * 0.65 * amplitude + peakPulse
 
         return CGFloat(min(0.95, height)) * size.height

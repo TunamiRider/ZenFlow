@@ -12,10 +12,21 @@ struct OceanBackground: View {
         GeometryReader { geo in
             ZStack {
                 Image(imagePath)
+//                    .resizable()
+//                    .scaledToFill()
+//                    .frame(width: geo.size.width, height: geo.size.height)
+//                    .clipped()
                     .resizable()
-                    .scaledToFill()
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    .clipped()
+                        .scaledToFill()
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .scaleEffect(1.08)
+                        // Static 3D perspective pitch tilt (makes bottom feel closer)
+                        .rotation3DEffect(
+                            .degrees(8),
+                            axis: (x: 1.0, y: 0.0, z: 0.0),
+                            perspective: 0.5
+                        )
+                        .clipped()
                 
                 Color.black.opacity(0.35)
 

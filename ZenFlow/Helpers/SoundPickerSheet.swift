@@ -136,6 +136,7 @@ struct SoundCircleItem: View {
                     isAnimating: isSelected
                 )
                 .foregroundColor(.white)
+                .shadow(color: Color.red.opacity(0.2), radius: 1, x: 0, y: 1)
             }
             .onTapGesture(perform: onTap)
             .scaleEffect(isSelected ? 1.08 : 1.0)
@@ -143,7 +144,9 @@ struct SoundCircleItem: View {
 
             Text(sound.displayName)
                 .font(.oceanCaptionSmall)
-                .foregroundColor(isSelected ? OceanTheme.textSelected : OceanTheme.textMuted)
+//                .foregroundColor(isSelected ? OceanTheme.textSelected : OceanTheme.textMuted)
+                .foregroundStyle(isSelected ? OceanTheme.textSelected : .white)
+                .shadow(color: Color.black.opacity(0.6), radius: 0.5, x: 0, y: 1)
                 .multilineTextAlignment(.center)
                 .frame(width: circleSize + 8)
                 .lineLimit(2)
@@ -165,7 +168,7 @@ struct OceanToggleStyle: ToggleStyle {
                 .overlay(
                     Circle()
                         .fill(.white)
-                        .shadow(color: .black.opacity(0.18), radius: 2, x: 0, y: 1)
+                        .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 1)
                         .frame(width: 24, height: 24)
                         .offset(x: configuration.isOn ? 10 : -10)
                         .animation(.spring(response: 0.28, dampingFraction: 0.75), value: configuration.isOn)
@@ -187,8 +190,8 @@ struct DingSettingsSection: View {
         VStack(alignment: .leading, spacing: 0) {
             
             Text("Interval Ding")
-                .font(.oceanTitle)
-                .foregroundColor(OceanTheme.textPrimary)
+                .foregroundStyle(.white)
+                .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                 .padding(.horizontal)
                 .padding(.bottom, 10)
 
@@ -197,11 +200,12 @@ struct DingSettingsSection: View {
                 Toggle(isOn: $dingEnabled) {
                     Label {
                         Text("Ding Sound")
-                            .font(.oceanBody)
-                            .foregroundColor(OceanTheme.textPrimary)
+                            .foregroundStyle(.white)
+                            .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                     } icon: {
                         Image(systemName: "bell.fill")
-                            .foregroundColor(OceanTheme.deepSlate)
+                            .foregroundStyle(.white)
+                            .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                     }
                 }
                 .toggleStyle(OceanToggleStyle())
@@ -211,18 +215,21 @@ struct DingSettingsSection: View {
 
                 if dingEnabled {
                     Rectangle()
-                        .fill(OceanTheme.divider)
+                        .fill(.white)
+                        .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                         .frame(height: 1)
-                        .padding(.leading, 44)
+                        .padding(.horizontal, 16)
+                    
 
                     HStack {
                         Label {
                             Text("Repeat Every")
-                                .font(.oceanBody)
-                                .foregroundColor(OceanTheme.textPrimary)
+                                .foregroundStyle(.white)
+                                .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                         } icon: {
                             Image(systemName: "clock.arrow.circlepath")
-                                .foregroundColor(OceanTheme.deepSlate)
+                                .foregroundStyle(.white)
+                                .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                         }
                         Spacer()
                         Menu {
@@ -234,6 +241,9 @@ struct DingSettingsSection: View {
                                         Text(intervalLabel(minutes))
                                         if dingInterval == minutes {
                                             Image(systemName: "checkmark")
+                                                .font(.caption2)
+                                                .foregroundStyle(.white)
+                                                .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                                         }
                                     }
                                 }
@@ -241,11 +251,12 @@ struct DingSettingsSection: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Text(intervalLabel(dingInterval))
-                                    .font(.oceanSubhead)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(.white)
+                                    .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                                 Image(systemName: "chevron.up.chevron.down")
                                     .font(.caption2)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(.white)
+                                    .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                             }
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
@@ -268,7 +279,8 @@ struct DingSettingsSection: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
-                    .stroke(OceanTheme.sandDeep.opacity(0.30), lineWidth: 1)
+                    .stroke(.white, lineWidth: 1)
+                    .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
             )
             .padding(.horizontal)
         }
@@ -287,8 +299,8 @@ struct WidgetSettingSection: View {
         VStack(alignment: .leading, spacing: 0) {
             
             Text("Show Live Activity on Lock Screen")
-                .font(.oceanTitle)
-                .foregroundColor(OceanTheme.textPrimary)
+                .foregroundStyle(.white)
+                .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                 .padding(.horizontal)
                 .padding(.bottom, 10)
             
@@ -297,11 +309,12 @@ struct WidgetSettingSection: View {
                 Toggle(isOn: $isWidgetOn) {
                     Label {
                         Text("Live Activity")
-                            .font(.oceanBody)
-                            .foregroundColor(OceanTheme.textPrimary)
+                            .foregroundStyle(.white)
+                            .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                     } icon: {
                         Image(systemName: "rectangle.stack.fill")
-                            .foregroundColor(OceanTheme.deepSlate)
+                            .foregroundStyle(.white)
+                            .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                     }
                 }
                 .toggleStyle(OceanToggleStyle())
@@ -314,7 +327,8 @@ struct WidgetSettingSection: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
-                    .stroke(OceanTheme.sandDeep.opacity(0.30), lineWidth: 1)
+                    .stroke(.white, lineWidth: 1)
+                    .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
             )
             .padding(.horizontal)
             
@@ -330,6 +344,7 @@ struct SoundPickerSheet: View {
     @Binding var dingEnabled: Bool
     @Binding var dingInterval: Int
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) var colorScheme
     
     @Binding var isWidgetOn: Bool
 
@@ -339,9 +354,20 @@ struct SoundPickerSheet: View {
         NavigationStack {
             ZStack {
                 //OceanTheme.sand.ignoresSafeArea()
-                Color(red: 0.38, green: 0.44, blue: 0.53).opacity(0.05).ignoresSafeArea()
-
-                ScrollView {
+                Color(red: 0.29, green: 0.53, blue: 0.52)
+                    .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 2)
+                    .ignoresSafeArea()
+//                LinearGradient (
+//                    colors: [
+//                        Color(red: 0.29, green: 0.53, blue: 0.52),   // deep teal
+//                        Color(red: 0.34, green: 0.58, blue: 0.57),   // mid teal
+//                        Color(red: 0.42, green: 0.64, blue: 0.62),   // soft seafoam
+//                        Color(red: 0.51, green: 0.71, blue: 0.68)    // light aqua
+//                    ],
+//                    startPoint: .top,
+//                    endPoint: .bottom
+//                ).ignoresSafeArea()
+                ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 28) {
 
                         DingSettingsSection(
@@ -353,8 +379,8 @@ struct SoundPickerSheet: View {
 
                         VStack(alignment: .leading, spacing: 14) {
                             Text("Sound")
-                                .font(.oceanTitle)
-                                .foregroundColor(OceanTheme.textPrimary)
+                                .foregroundStyle(.white)
+                                .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                                 .padding(.horizontal)
 
                             LazyVGrid(columns: columns, spacing: 24) {
@@ -373,7 +399,8 @@ struct SoundPickerSheet: View {
                             .padding(.vertical, 13)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14)
-                                    .stroke(OceanTheme.sandDeep.opacity(0.30), lineWidth: 1)
+                                    .stroke(.white, lineWidth: 1)
+                                    .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
                             )
                             .padding(.horizontal)
                         }
@@ -387,29 +414,30 @@ struct SoundPickerSheet: View {
                 }
             }
             .navigationTitle("Sound Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            //.toolbarBackground(OceanTheme.sand, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Sound Settings")
-                        .font(.oceanTitle)
-                        .foregroundColor(OceanTheme.textPrimary)
+                        .foregroundStyle(.white)
+                    
+                        .shadow(color: Color.black.opacity(0.6), radius: 1, x: 0, y: 1)
+                        //.font(.oceanTitle)
+                        //.foregroundColor(OceanTheme.textPrimary)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                        .font(.oceanSubhead)
-                        .foregroundColor(OceanTheme.deepSlate)
-                        .background(
-                            Capsule()
-                                .fill(OceanTheme.sand.opacity(0.5))
-                        )
-                        .overlay(
-                            Capsule()
-                                .stroke(OceanTheme.deepSlate.opacity(0.15), lineWidth: 2)
-                        )
+                    Button {
+                            dismiss()
+                        } label: {
+                            Text("Done")
+                                .font(.oceanSubhead)
+                                .foregroundStyle(.white)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color(red: 0.23, green: 0.47, blue: 0.46))
+                        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+                    
                 }
             }
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }
@@ -445,7 +473,7 @@ struct SoundPickerSheet: View {
             }
             .sheet(isPresented: $showSheet) {
                 ZStack {
-                    Color.black.opacity(0.05)
+                    //Color.black.opacity(0.05)
                     SoundPickerSheet(
                         selectedSound: $selected,
                         dingEnabled: $dingEnabled,
